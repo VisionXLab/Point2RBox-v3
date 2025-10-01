@@ -8,6 +8,11 @@
 Driven by the growing need for Oriented Object Detection (OOD), learning from point annotations under a weakly-supervised framework has emerged as a promising alternative to costly and laborious manual labeling. In this paper, we discuss two deficiencies in existing point-supervised methods: inefficient utilization and poor quality of pseudo labels. Therefore, we present Point2RBox-v3. At the core are two principles: \textbf{1) Progressive Label Assignment (PLA)}. It dynamically estimates instance sizes in a coarse yet intelligent manner at different stages of the training process, enabling the use of label assignment methods. \textbf{2) Prior-Guided Dynamic Mask Loss (PGDM-Loss)}. It is an enhancement of the Voronoi Watershed Loss from Point2RBox-v2, which overcomes the shortcomings of Watershed in its poor performance in sparse scenes and SAM's poor performance in dense scenes. To our knowledge, Point2RBox-v3 is the first model to employ dynamic pseudo labels for label assignment, and it creatively complements the advantages of SAM model with the watershed algorithm, which achieves excellent performance in both sparse and dense scenes. Our solution gives competitive performance, especially in scenarios with large variations in object size or sparse object occurrences: 66.09\%/56.86\%/41.28\%/46.40\%/19.60\%/45.96\% on DOTA-v1.0/DOTA-v1.5/DOTA-v2.0/DIOR/STAR/RSAR.
 </div>
 
+## TODOs
+
+- [ ] Release the paper on arXiv.
+- [ ] Release the complete code.
+- [ ] Release the checkpoints.
 
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
@@ -51,13 +56,6 @@ Driven by the growing need for Oriented Object Detection (OOD), learning from po
 <p align="center">
   <img src="figures/Point2RBox-v3-abl-pwood-results.png" alt="arch" width="90%">
 </p>
-
-
-## TODOs
-
-- [ ] Release the paper on arXiv.
-- [ ] Release the initial code.
-- [ ] Release the complete code.
 
 ## Contact
 
