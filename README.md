@@ -1,7 +1,7 @@
 <div align="center">
 <h1>Point2RBox-v3: Self-Bootstrapping from Point Annotations via Integrated Pseudo-Label Refinement and Utilization</h1>
 </div>
-<a href='https://arxiv.org/abs/2508.10801'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>  <a href=#citation><img src='https://img.shields.io/badge/Paper-BibTex-Green'></a> 
+<a href='https://arxiv.org/pdf/2509.26281'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>  <a href=#citation><img src='https://img.shields.io/badge/Paper-BibTex-Green'></a> 
 
 ## Abstract
 <div style="text-align:justify">
@@ -10,7 +10,7 @@ Driven by the growing need for Oriented Object Detection (OOD), learning from po
 
 ## TODOs
 
-- [ ] Release the paper on arXiv.
+- [x] Release the paper on arXiv.
 - [ ] Release the complete code.
 - [ ] Release the checkpoints.
 
