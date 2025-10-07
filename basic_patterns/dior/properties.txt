@@ -1,0 +1,22 @@
+{
+    'airplane': (200, 200, 0.5, 0.3),
+    'airport': (300, 200, 0.5, 0.8),
+    'baseballfield': (100, 100, 0.5, 0.3),
+    'basketballcourt': (200, 110, 0.5, 0.8),
+    'bridge': (50, 10, 0.5, 0.8),
+    'chimney': (120, 120, 0.5, 0.3),
+    'expressway-service-area': (300, 120, 0.5, 0.8),
+    'expressway-toll-station': (300, 120, 0.5, 0.8),
+    'dam': (150, 50, 0.5, 0.8),
+    'golffield': (300, 300, 0.5, 0.3),
+    'groundtrackfield': (300, 150, 0.5, 0.8),
+    'harbor': (132, 25, 0.5, 0.8),
+    'overpass': (160, 55, 0.5, 0.8),
+    'ship': (76, 26, 0.5, 0.8),
+    'stadium': (300, 200, 0.5, 0.3),
+    'storagetank': (80, 80, 0.5, 0.3),
+    'tenniscourt': (180, 90, 0.5, 0.8),
+    'trainstation': (200, 70, 0.5, 0.8),
+    'vehicle': (40, 20, 0.5, 0.8),
+    'windmill': (90, 80, 0.5, 0.3)
+}
