@@ -20,6 +20,7 @@ from .sam_reppoints_head import SAMRepPointsHead
 from .h2rbox_v2_s2a_head import H2RBoxV2S2AHead, H2RBoxV2S2ARefineHead
 from .whollywood_p2h_head import WhollyWoodP2HHead
 from .whollywood_p2r_head import WhollyWoodP2RHead
+from .point2rbox_v3_head import Point2RBoxV3Head
 
 __all__ = [
     'RotatedRetinaHead', 'OrientedRPNHead', 'RotatedRepPointsHead',
@@ -29,5 +30,5 @@ __all__ = [
     'RotatedRTMDetHead', 'RotatedRTMDetSepBNHead', 'Point2RBoxYOLOFHead', 
     'H2RBoxV2PHead',  'RotatedFCOSBFHead', 'Point2RBoxV2Head',
     'H2RBoxV2S2AHead', 'H2RBoxV2S2ARefineHead', 'WhollyWoodP2HHead',
-    'WhollyWoodP2RHead'
+    'WhollyWoodP2RHead', 'Point2RBoxV3Head'
 ]

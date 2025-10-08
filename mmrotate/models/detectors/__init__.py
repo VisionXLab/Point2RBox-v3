@@ -9,10 +9,11 @@ from .point2rbox_v2 import Point2RBoxV2
 from .refine_single_stage import RefineSingleStageDetector
 from .whollywood_p2h import WhollyWoodP2H
 from .whollywood_p2r import WhollyWoodP2R
+from .point2rbox_v3 import Point2RBoxV3
 
 __all__ = [
     'RefineSingleStageDetector', 'H2RBoxDetector', 'H2RBoxV2Detector', 
     'Point2RBoxV2', 'Point2RBoxYOLOF', 'H2RBoxV2PDetector',
     'H2RBoxV2ReDetDetector', 'H2RBoxV2S2ANetDetector', 'WhollyWoodP2H',
-    'WhollyWoodP2R'
+    'WhollyWoodP2R', 'Point2RBoxV3'
 ]
