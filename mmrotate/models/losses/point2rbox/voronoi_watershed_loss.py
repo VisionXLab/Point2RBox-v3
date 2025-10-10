@@ -1,3 +1,7 @@
+import cv2
+import torch
+import torch.fun
+import numpy as np
 from mmrotate.registry import MODELS
 
 def gaussian_2d(xy, mu, sigma, normalize=False):

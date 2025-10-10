@@ -1,3 +1,5 @@
+import torch
+import torch.nn as nn
 from mmrotate.registry import MODELS
 from mmdet.models.losses.utils import weighted_loss
 

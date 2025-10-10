@@ -1,3 +1,4 @@
+from torch import nn
 from mmrotate.registry import MODELS
 
 

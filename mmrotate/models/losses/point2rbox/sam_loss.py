@@ -1,5 +1,9 @@
 import cv2
+import torch
+from torch import nn
+import numpy as np
 from mmrotate.registry import MODELS
+from .utils import gwd_sigma_loss
 try:
     from mobile_sam import sam_model_registry, SamPredictor
 except ImportError:
@@ -8,12 +12,16 @@ except ImportError:
 @MODELS.register_module()
 class SamLoss(nn.Module):
     def __init__(self, model_checkpoint='./mobile_sam.pt', model_type='vit_t', model_device="cuda",
-                 sam_instance_thr=-1, mask_filter_config=None, loss_weight=1, debug=False):
+                 mask_filter_config=None, loss_weight=1, debug=False):
         super(SamLoss, self).__init__()
 
         sam = sam_model_registry[model_type](checkpoint=model_checkpoint)
         sam.to(model_device)
         self.predictor = SamPredictor(sam)
+        
+        self.mask_filter_config = mask_filter_config
+        self.loss_weight = loss_weight
+        self.debug = debug
 
     def forward(self, pred, label, image):
         loss, self.vis = self.sam_loss_helper(*pred, 
@@ -45,7 +53,7 @@ class SamLoss(nn.Module):
             if self.debug:
                 print(f"Processing point {j+1}/{J} at {point}")
             
-            point_coords, point_labels = set_prompt_points(points, j, H, W)
+            point_coords, point_labels = self.set_prompt_points(points, j, H, W)
 
             masks, scores, _ = self.predictor.predict(
                 point_coords=point_coords,
@@ -58,7 +66,7 @@ class SamLoss(nn.Module):
             
             class_id = label[j].item()
             best_mask_idx, metrics_values, shape_metrics = self.filter_masks(
-                masks, scores, class_id, img_np, point, mask_filter_config, debug
+                masks, scores, class_id, img_np, point, self.mask_filter_config, self.debug
             )
 
             mask = masks[best_mask_idx]
@@ -312,7 +320,7 @@ class SamLoss(nn.Module):
                     (x, y), radius = cv2.minEnclosingCircle(largest_contour)
                     radius= int(radius)
                     
-                    height, width = image.shape[-2:]
+                    height, width = original_image.shape[-2:]
                     
                     # print(f"Image size: {height}x{width}, Circle center: ({x:.2f}, {y:.2f}), Radius: {radius}")
                     
@@ -348,7 +356,7 @@ class SamLoss(nn.Module):
                     box = np.int64(box)
 
                     # 获取图像尺寸
-                    height, width = image.shape[-2:]
+                    height, width = original_image.shape[-2:]
                     # print(f"Image size: {height}x{width}, Box points: {box}")
                     # 创建掩码
                     tmp_mask = np.zeros((height, width), dtype=np.uint8)
@@ -520,7 +528,7 @@ class SamLoss(nn.Module):
                     results['center_alignment'] = alignment_score
                 # --- 新增逻辑结束 ---
                 
-        if debug:
+        if self.debug:
             print(f"Calculated shape metrics: {results}")
         return results
 

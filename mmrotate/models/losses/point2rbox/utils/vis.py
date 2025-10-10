@@ -1,3 +1,6 @@
+import torch
+import numpy as np
+
 def plot_edge_map(feat, edgex, edgey):
     """Plot figures for debug."""
     import matplotlib.pyplot as plt

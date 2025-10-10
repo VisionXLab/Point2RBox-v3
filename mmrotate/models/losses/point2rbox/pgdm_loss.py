@@ -1,3 +1,4 @@
+import torch.nn as nn
 from .voronoi_watershed_loss import VoronoiWatershedLoss
 from .sam_loss import SamLoss
 from mmrotate.registry import MODELS
@@ -20,13 +21,15 @@ class PgdmLoss(nn.Module):
                 sam_device='cuda',
                 sam_instance_thr=-1,
                 mask_filter_config=None,
-                use_class_specific_watershed=False,
+                use_class_specific=False,
                 debug=False):
         """
         """
-        super(PgdmLoss, self).__init__()   
+        super(PgdmLoss, self).__init__()
+        self.use_class_specific = use_class_specific
+        self.sam_instance_thr = sam_instance_thr  
         self.voronoi_watershed_loss = VoronoiWatershedLoss(down_sample, loss_weight_watershed, topk, alpha, debug)
-        self.sam_loss = SamLoss(sam_checkpoint, sam_type, sam_device, sam_instance_thr, mask_filter_config, loss_weight_sam, debug)
+        self.sam_loss = SamLoss(sam_checkpoint, sam_type, sam_device, mask_filter_config, loss_weight_sam, debug)
     
     def forward(self, pred,
             label, image, 
@@ -37,7 +40,7 @@ class PgdmLoss(nn.Module):
         if J == 0:
             return sigma.sum()
         
-        if J <= sam_instance_thr:  # sparse
+        if J <= self.sam_instance_thr:  # sparse
             loss, markers = self.sam_loss(
                 (mu, sigma), label, image)
             vor = markers.clone()

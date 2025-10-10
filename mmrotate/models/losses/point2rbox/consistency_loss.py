@@ -1,5 +1,9 @@
+import math
+import torch
+import torch.nn.functional as F
+import torch.nn as nn
 from mmrotate.registry import MODELS
-
+from .utils import gwd_sigma_loss
 
 @MODELS.register_module()
 class Point2RBoxV2ConsistencyLoss(nn.Module):
