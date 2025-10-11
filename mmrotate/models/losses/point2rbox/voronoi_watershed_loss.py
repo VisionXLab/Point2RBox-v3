@@ -1,8 +1,10 @@
 import cv2
 import torch
-import torch.fun
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from mmrotate.registry import MODELS
+from .utils import gwd_sigma_loss
 
 def gaussian_2d(xy, mu, sigma, normalize=False):
     dxy = (xy - mu).unsqueeze(-1)

@@ -41,13 +41,14 @@ class PgdmLoss(nn.Module):
             return sigma.sum()
         
         if J <= self.sam_instance_thr:  # sparse
-            loss, markers = self.sam_loss(
+            loss = self.sam_loss(
                 (mu, sigma), label, image)
-            vor = markers.clone()
-            return loss, (vor, markers)
+            self.vis = self.sam_loss.vis
+            return loss
         else:  # dense
-            loss, (vor, markers) = self.voronoi_watershed_loss(
+            loss = self.voronoi_watershed_loss(
                 (mu, sigma), label, image, pos_thres, neg_thres, voronoi)  # In fact, pos_thres, neg_thres and voronoi should be
                 # defined as object variable; however here retain the inappropriate interfaces solely for compatibility with point2
                 # rbox-v2 version.
-            return loss, (vor, markers)
+            self.vis = self.voronoi_watershed_loss.vis
+            return loss

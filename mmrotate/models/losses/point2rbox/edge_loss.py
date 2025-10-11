@@ -1,4 +1,6 @@
+import torch
 from torch import nn
+from .utils import rbbox2roi
 from mmrotate.registry import MODELS
 
 

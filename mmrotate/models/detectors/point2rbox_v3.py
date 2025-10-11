@@ -687,7 +687,7 @@ class Point2RBoxV3(SingleStageDetector):
             else:
                 sigma = None
 
-            if self.bbox_head.loss_voronoi.use_class_specific_watershed:
+            if self.bbox_head.loss_pgdm.use_class_specific:
                 pseudo_info = torch.ones(J, 5)
                 for cur_class_id in range(self.bbox_head.num_classes):
                     cur_class_mask = label == cur_class_id

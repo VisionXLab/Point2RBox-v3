@@ -95,9 +95,10 @@ class SamLoss(nn.Module):
         
         final_loss = total_loss / max(1, valid_instances)  # 避免除以0
         
-        return final_loss, markers
+        return final_loss, (markers.clone(), markers)
 
     def set_prompt_points(self, points, j, H, W):
+        J = len(points)
 
         all_points = []
         all_labels = []

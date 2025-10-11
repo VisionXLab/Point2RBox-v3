@@ -6,7 +6,7 @@ from mmrotate.registry import MODELS
 from .utils import gwd_sigma_loss
 
 @MODELS.register_module()
-class Point2RBoxV2ConsistencyLoss(nn.Module):
+class ConsistencyLoss(nn.Module):
     """Consistency Loss.
 
     Args:
@@ -22,7 +22,7 @@ class Point2RBoxV2ConsistencyLoss(nn.Module):
     def __init__(self,
                  reduction='mean',
                  loss_weight=1.0):
-        super(Point2RBoxV2ConsistencyLoss, self).__init__()
+        super(ConsistencyLoss, self).__init__()
         self.reduction = reduction
         self.loss_weight = loss_weight
 
