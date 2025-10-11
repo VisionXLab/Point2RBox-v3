@@ -89,12 +89,12 @@ class Point2RBoxV3Head(AnchorFreeHead):
                      type='GWDLoss', loss_weight=5.0),
                  loss_overlap: ConfigType = dict(
                      type='GaussianOverlapLoss', loss_weight=10.0),
-                 loss_voronoi: ConfigType = dict(
-                     type='VoronoiWatershedLoss', loss_weight=5.0),
+                 loss_pgdm: ConfigType = dict(
+                     type='PgdmLoss', loss_weight_watershed=5.0, loss_weight_sam=5.0),
                  loss_bbox_edg: ConfigType = dict(
                      type='EdgeLoss', loss_weight=0.3),
                  loss_ss=dict(
-                    type='Point2RBoxV2ConsistencyLoss', loss_weight=1.0),
+                    type='ConsistencyLoss', loss_weight=1.0),
                  norm_cfg=dict(type='GN', num_groups=32, requires_grad=True),
                  init_cfg=dict(
                      type='Normal',
@@ -139,7 +139,7 @@ class Point2RBoxV3Head(AnchorFreeHead):
         self.post_process = post_process
         self.loss_ss = MODELS.build(loss_ss)
         self.loss_overlap = MODELS.build(loss_overlap)
-        self.loss_voronoi = MODELS.build(loss_voronoi)
+        self.loss_pgdm = MODELS.build(loss_pgdm)
         self.loss_bbox_edg = MODELS.build(loss_bbox_edg)
         if self.use_adaptive_scale:
             self.adaptive_scale = nn.Parameter(torch.ones(num_classes, num_classes))
@@ -365,7 +365,7 @@ class Point2RBoxV3Head(AnchorFreeHead):
 
             ori_mu_all = ins_rbox_targets[:, 0:2]
             loss_bbox_ovl = ori_mu_all.new_tensor(0)
-            loss_bbox_vor = ori_mu_all.new_tensor(0)
+            loss_bbox_pgdm = ori_mu_all.new_tensor(0)
             for batch_id in range(len(batch_gt_instances)):
                 group_mask = (ins_batch == batch_id) & (ins_bids != 0)
                 # Overlap and Voronoi Losses
@@ -377,9 +377,9 @@ class Point2RBoxV3Head(AnchorFreeHead):
                         row_indices = label.unsqueeze(1).expand(-1, label.size(0))
                         col_indices = label.unsqueeze(0).expand(label.size(0), -1)
                         o_s = self.adaptive_scale[row_indices, col_indices]
-                        loss_bbox_ovl += self.loss_overlap((mu, sigma.bmm(sigma)), overlap_scale=o_s, labels=label)
+                        loss_bbox_ovl += self.loss_overlap((mu, sigma.bmm(sigma)), overlap_scale=o_s)
                     else:
-                        loss_bbox_ovl += self.loss_overlap((mu, sigma.bmm(sigma)),labels=label)
+                        loss_bbox_ovl += self.loss_overlap((mu, sigma.bmm(sigma)))
                 if len(mu) >= 1:
                     pos_thres = [self.voronoi_thres['default'][0]] * self.num_classes
                     neg_thres = [self.voronoi_thres['default'][1]] * self.num_classes
@@ -388,8 +388,8 @@ class Point2RBoxV3Head(AnchorFreeHead):
                             for cls in item[0]:
                                 pos_thres[cls] = item[1][0]
                                 neg_thres[cls] = item[1][1]
-                    if self.loss_voronoi.use_class_specific_watershed:
-                        cur_loss_bbox_vor = ori_mu_all.new_tensor(0)
+                    if self.loss_pgdm.use_class_specific:
+                        cur_loss_bbox_pgdm = ori_mu_all.new_tensor(0)
                         for cur_class_id in range(self.num_classes):
                             cur_class_mask = label == cur_class_id
                             if not torch.any(cur_class_mask):
@@ -397,19 +397,17 @@ class Point2RBoxV3Head(AnchorFreeHead):
                             cur_mu = mu[cur_class_mask]
                             cur_sigma = sigma[cur_class_mask]
                             cur_label = label[cur_class_mask]
-                            cur_loss_bbox_vor += self.loss_voronoi((cur_mu, cur_sigma.bmm(cur_sigma)),
+                            cur_loss_bbox_pgdm += self.loss_pgdm((cur_mu, cur_sigma.bmm(cur_sigma)),
                                                         cur_label, self.images_no_copypaste[batch_id],  # whether to conduct ablation experiments?
                                                         pos_thres, neg_thres,
-                                                        reliable_sigma=(self.epoch >= self.edge_loss_start_epoch),
                                                         voronoi=self.voronoi_type) * len(cur_mu)
-                        loss_bbox_vor += cur_loss_bbox_vor / len(mu)
+                        loss_bbox_pgdm += cur_loss_bbox_pgdm / len(mu)
                     else:
-                        loss_bbox_vor += self.loss_voronoi((mu, sigma.bmm(sigma)),
+                        loss_bbox_pgdm += self.loss_pgdm((mu, sigma.bmm(sigma)),
                                                        label, self.images_no_copypaste[batch_id],  # whether to conduct ablation experiments?
                                                        pos_thres, neg_thres,
-                                                       reliable_sigma=(self.epoch >= self.edge_loss_start_epoch),
                                                        voronoi=self.voronoi_type)
-                    self.vis[batch_id] = self.loss_voronoi.vis
+                    self.vis[batch_id] = self.loss_pgdm.vis
             
             #  Batched RBox for Edge Loss
             loss_bbox_edg = ori_mu_all.new_tensor(0)
@@ -426,7 +424,7 @@ class Point2RBoxV3Head(AnchorFreeHead):
                 loss_bbox_edg = self.loss_bbox_edg(batched_rbox, self.edges)
             
             loss_bbox_ovl = loss_bbox_ovl / len(batch_gt_instances)
-            loss_bbox_vor = loss_bbox_vor / len(batch_gt_instances)
+            loss_bbox_pgdm = loss_bbox_pgdm / len(batch_gt_instances)
             loss_bbox_edg = loss_bbox_edg / len(batch_gt_instances)
 
             pair_gaus_preds = ins_gaus_preds[bmsk].view(-1, 2, 2, 2)
@@ -474,7 +472,7 @@ class Point2RBoxV3Head(AnchorFreeHead):
                 loss_ss = 0 * pos_angle_preds.sum()
         else:
             loss_bbox = pos_bbox_preds.sum()
-            loss_bbox_vor = pos_bbox_preds.sum()
+            loss_bbox_pgdm = pos_bbox_preds.sum()
             loss_bbox_ovl = pos_bbox_preds.sum()
             loss_bbox_edg = pos_bbox_preds.sum()
             loss_ss = pos_bbox_preds.sum()
@@ -482,7 +480,7 @@ class Point2RBoxV3Head(AnchorFreeHead):
         return dict(
             loss_cls=loss_cls,
             loss_bbox=loss_bbox,
-            loss_bbox_vor=loss_bbox_vor,
+            loss_bbox_pgdm=loss_bbox_pgdm,
             loss_bbox_ovl=loss_bbox_ovl,
             loss_bbox_edg=loss_bbox_edg,
             loss_ss=loss_ss,
