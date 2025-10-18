@@ -8,8 +8,9 @@ from .kf_iou_loss import KFLoss
 from .rotated_iou_loss import RotatedIoULoss
 from .smooth_focal_loss import SmoothFocalLoss
 from .spatial_border_loss import SpatialBorderLoss
-from .point2rbox_v2_loss import EdgeLoss, Point2RBoxV2ConsistencyLoss
-from .point2rbox_v3_loss import GaussianOverlapLoss, VoronoiWatershedLoss
+# from .point2rbox_v2_loss import EdgeLoss, Point2RBoxV2ConsistencyLoss
+# from .point2rbox_v3_loss import GaussianOverlapLoss, VoronoiWatershedLoss
+from .point2rbox_v2_loss import EdgeLoss, Point2RBoxV2ConsistencyLoss, GaussianOverlapLoss, VoronoiWatershedLoss
 
 __all__ = [
     'GDLoss', 'GDLoss_v1', 'KFLoss', 'ConvexGIoULoss', 'BCConvexGIoULoss',
