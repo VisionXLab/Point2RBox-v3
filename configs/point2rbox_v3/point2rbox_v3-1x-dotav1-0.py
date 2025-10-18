@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/datasets/dota.py', '../_base_/schedules/schedule_1x.py',
-    '../_base_/default_runtime.py'
+    '../_base_/default_runtime.py', './_base_sam-dotav1-0.py'
 ]
 
 angle_version = 'le90'
@@ -69,7 +69,10 @@ model = dict(
             type='GaussianOverlapLoss', loss_weight=10.0, lamb=0,
             ),
         loss_voronoi=dict(
-            type='VoronoiWatershedLoss', loss_weight=5.0, use_class_specific_watershed=False),
+            type='VoronoiWatershedLoss', loss_weight=5.0,
+            mask_filter_config=_base_.mask_filter_config,
+            sam_instance_thr=_base_.sam_instance_thr,
+            use_class_specific_watershed=False),
         loss_bbox_edg=dict(
             type='EdgeLoss', loss_weight=0.3),
         loss_ss=dict(
