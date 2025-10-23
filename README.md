@@ -14,6 +14,12 @@ Driven by the growing need for Oriented Object Detection (OOD), learning from po
 - [ ] Release the complete code.
 - [ ] Release the checkpoints.
 
+## Results and models
+
+|methods|e2e|config_file|log|email|model|
+|---|---|---|---|---|---|
+|PLA|56.43|[point2rbox_v3-1x-dotav1-0](https://pan.quark.cn/s/dd47829984b7)|[20251022_160639](https://pan.quark.cn/s/fb03a9c4a3de)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/f20b5b25edbf)|[epoch_12.pth](https://pan.quark.cn/s/1ea5b81afc51)|
+
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
 <p align="center">
