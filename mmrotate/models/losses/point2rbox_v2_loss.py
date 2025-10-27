@@ -1,14 +1,20 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import math
+from click import prompt
+from pandas import Timestamp
+from sympy import im
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import cv2
 import numpy as np
+from torch import Tensor
 from mmdet.models.losses.utils import weighted_loss
 
 from mmrotate.registry import MODELS
 from mmrotate.models.losses.gaussian_dist_loss import postprocess
+from mmrotate.models.losses.utils import filter_masks
+from mmrotate.models.losses.vis import plot_gaussian_voronoi_watershed, visualize_loss_calculation, save_debug_visualization
 
 
 @weighted_loss
@@ -89,16 +95,7 @@ def bhattacharyya_coefficient(pred, target):
 @weighted_loss
 def gaussian_overlap_loss(pred, target, alpha=0.01, beta=0.6065, overlap_scale=None):
     """Calculate Gaussian overlap loss based on bhattacharyya coefficient.
-
-    Args:
-        pred (Tuple): tuple of (xy, sigma).
-            xy (torch.Tensor): center point of 2-D Gaussian distribution
-                with shape (N, 2).
-            sigma (torch.Tensor): covariance matrix of 2-D Gaussian distribution
-                with shape (N, 2, 2).
-
-    Returns:
-        loss (Tensor): overlap loss with shape (N, N).
+    ...
     """
     mu, sigma = pred
     B = mu.shape[0]
@@ -109,11 +106,11 @@ def gaussian_overlap_loss(pred, target, alpha=0.01, beta=0.6065, overlap_scale=N
     loss = bhattacharyya_coefficient((mu0, sigma0), (mu1, sigma1))
     if overlap_scale is not None:
         loss = torch.mul(loss, overlap_scale) * overlap_scale.numel() / torch.relu(overlap_scale).sum()
+
     loss[torch.eye(B, dtype=bool)] = 0
     loss = F.leaky_relu(loss - beta, negative_slope=alpha) + beta * alpha
     loss = loss.sum(-1)
     return loss
-
 
 @MODELS.register_module()
 class GaussianOverlapLoss(nn.Module):
@@ -132,7 +129,8 @@ class GaussianOverlapLoss(nn.Module):
     def __init__(self,
                  reduction='mean',
                  loss_weight=1.0,
-                 lamb=1e-4):
+                 lamb=1e-4,
+                 ):
         super(GaussianOverlapLoss, self).__init__()
         self.reduction = reduction
         self.loss_weight = loss_weight
@@ -159,6 +157,7 @@ class GaussianOverlapLoss(nn.Module):
             reduction_override (str, optional): The reduction method used to
                 override the original reduction method of the loss.
                 Options are "none", "mean" and "sum".
+            overlap_scale (torch.Tensor, optional): scale matrix for overlap loss with shape(N, N).
 
         Returns:
             torch.Tensor: The calculated loss
@@ -167,47 +166,24 @@ class GaussianOverlapLoss(nn.Module):
         reduction = (
             reduction_override if reduction_override else self.reduction)
         assert len(pred[0]) == len(pred[1])
+        
+        mu, sigma = pred
+        J = mu.shape[0]
 
-        sigma = pred[1]
         L = torch.linalg.eigh(sigma)[0].clamp(1e-7).sqrt()
         loss_lamb = F.l1_loss(L, torch.zeros_like(L), reduction='none')
         loss_lamb = self.lamb * loss_lamb.log1p().mean()
         
-        return self.loss_weight * (loss_lamb + gaussian_overlap_loss(
+        overlap_loss = gaussian_overlap_loss(
             pred,
             None,
             weight,
             reduction=reduction,
             avg_factor=avg_factor,
-            overlap_scale=overlap_scale
-            ))
+            overlap_scale=overlap_scale,
+        )
 
-
-def plot_gaussian_voronoi_watershed(*images):
-    """Plot figures for debug."""
-    import matplotlib.pyplot as plt
-    plt.figure(dpi=300, figsize=(len(images) * 4, 4))
-    plt.tight_layout()
-    fileid = np.random.randint(0, 20)
-    for i in range(len(images)):
-        img = images[i]
-        img = (img - img.min()) / (img.max() - img.min())
-        if img.dim() == 3:
-            img = img.permute(1, 2, 0)
-        img = img.detach().cpu().numpy()
-        plt.subplot(1, len(images), i + 1)
-        if i == 3:
-            plt.imshow(img)
-            x = np.linspace(0, 1024, 1024)
-            y = np.linspace(0, 1024, 1024)
-            X, Y = np.meshgrid(x, y)
-            plt.contourf(X, Y, img, levels=8, cmap=plt.get_cmap('magma'))
-        else:
-            plt.imshow(img)
-        plt.xticks([])
-        plt.yticks([])
-    plt.savefig(f'debug/Gaussian-Voronoi-{fileid}.png')
-    plt.close()
+        return self.loss_weight * (loss_lamb + overlap_loss)
 
 
 def gaussian_2d(xy, mu, sigma, normalize=False):
@@ -218,20 +194,220 @@ def gaussian_2d(xy, mu, sigma, normalize=False):
     return t0
 
 
-def gaussian_voronoi_watershed_loss(mu, sigma,
-                                    label, image, 
-                                    pos_thres, neg_thres, 
-                                    down_sample=2, topk=0.95, 
-                                    default_sigma=4096,
-                                    voronoi='gaussian-orientation',
-                                    alpha=0.1,
-                                    debug=False):
+def sigma_to_rbox_params(sigma: torch.Tensor):
+    if not (sigma.shape == (2, 2)):
+        raise ValueError("输入必须是一个 (2, 2) 的张量")
+    L, V = torch.linalg.eigh(sigma)
+    W_rotated = 2 * torch.sqrt(L[1])
+    H_rotated = 2 * torch.sqrt(L[0])
+    major_axis_vector = V[:, 1]
+    angle_rad = torch.atan2(major_axis_vector[1], major_axis_vector[0])
+    return W_rotated, H_rotated, angle_rad
+
+def _get_box_prompt_from_gaussian(mu_j, sigma_j, sigma_scale=1, ellipse_scale_factor=1):
+    W_base, H_base, angle_rad = sigma_to_rbox_params(sigma_j)
+    
+    scale_factor_from_sigma = math.sqrt(sigma_scale)
+    
+    final_scale_factor = scale_factor_from_sigma * ellipse_scale_factor
+    
+    semi_axis_a = (W_base / 2) * final_scale_factor
+    semi_axis_b = (H_base / 2) * final_scale_factor
+
+    cos_theta = torch.cos(angle_rad)
+    sin_theta = torch.sin(angle_rad)
+    
+    half_width_bbox = torch.sqrt((semi_axis_a * cos_theta)**2 + (semi_axis_b * sin_theta)**2)
+    half_height_bbox = torch.sqrt((semi_axis_a * sin_theta)**2 + (semi_axis_b * cos_theta)**2)
+
+    mu_x, mu_y = mu_j[0], mu_j[1]
+    x_min = mu_x - half_width_bbox
+    y_min = mu_y - half_height_bbox
+    x_max = mu_x + half_width_bbox
+    y_max = mu_y + half_height_bbox
+    
+    bbox_prompt = torch.stack([x_min, y_min, x_max, y_max], dim=-1).detach().cpu().numpy()
+    
+    return bbox_prompt.reshape(1, 4)
+
+
+def segment_anything(image, mu, sigma, device=None, sam_checkpoint=None, model_type=None, label=None, debug=False, mask_filter_config=None, sam_sample_rules=None):
+    if debug:
+        print("Entering SAM branch:")
+    try:
+        from mobile_sam import sam_model_registry, SamPredictor
+        import numpy as np
+        import os
+        import time
+        from PIL import Image
+        import matplotlib.pyplot as plt
+    except ImportError:
+        raise ImportError("Please install MobileSAM: pip install git+https://github.com/ChaoningZhang/MobileSAM.git")
+
+    if device is None:
+        device = "cuda"
+    
+    img_np = (image - image.min()) / (image.max() - image.min()) * 255.0
+    img_np = img_np.permute(1, 2, 0).detach().cpu().numpy().astype(np.uint8)
+    
+    H, W = img_np.shape[:2]
+    J = len(mu)
+    
+    if sam_checkpoint is None:
+        import os
+        import time
+        from PIL import Image
+        from scipy import ndimage
+        common_paths = [
+            "./mobile_sam.pt"
+        ]
+        for path in common_paths:
+            if os.path.exists(path):
+                sam_checkpoint = path
+                break
+        if sam_checkpoint is None:
+            raise ValueError("未找到MobileSAM检查点，请指定sam_checkpoint参数")
+
+    if not hasattr(segment_anything, 'sam_model') or not hasattr(segment_anything, 'model_type') or segment_anything.model_type != model_type:
+        sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+        sam.to(device)
+        segment_anything.sam_model = sam
+        segment_anything.model_type = model_type
+    else:
+        sam = segment_anything.sam_model
+    
+    predictor = SamPredictor(sam)
+    
+    predictor.set_image(img_np)
+    
+    points = mu.detach().cpu().numpy()
+    
+    markers = torch.full((H, W), J+1, dtype=torch.int32, device=mu.device)
+    
+    total_loss = 0.0
+    valid_instances = 0
+    L, V = torch.linalg.eigh(sigma)
+    for j, point in enumerate(points):
+        if debug:
+            print(f"Processing point {j+1}/{J} at {point}")
+
+        box_prompt = None
+
+        all_points = []
+        all_labels = []
+        
+        all_points.append(point)
+        all_labels.append(1)
+        
+        for k in range(J):
+            if k != j:
+                if sam_sample_rules is not None:
+                    skip = False
+                    j_label = label[j].item()
+                    k_label = label[k].item()
+                    dist = np.sqrt(((points[j] - points[k]) ** 2).sum())
+                    for filter_pair in sam_sample_rules["filter_pairs"]:
+                        class_id1, class_id2, dist_thr = filter_pair
+                        if ((j_label == class_id1 and k_label == class_id2) or (j_label == class_id2 and k_label == class_id1)) \
+                            and dist < dist_thr:
+                            skip = True
+                            break
+                    if skip:
+                        continue
+                    
+                all_points.append(points[k])
+                all_labels.append(0)
+                
+        point_coords = np.array(all_points)
+        point_labels = np.array(all_labels)
+
+        masks, scores, _ = predictor.predict(
+            point_coords=point_coords,
+            point_labels=point_labels,
+            box=box_prompt,
+            multimask_output=True
+        )
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        masks_processed = []
+        
+        for mask in masks:
+            mask_opened = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_OPEN, kernel)
+            
+            num_labels, labels_conn, stats, centroids = cv2.connectedComponentsWithStats(mask_opened)
+            
+            if num_labels > 1:
+                largest_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
+                
+                largest_mask = (labels_conn == largest_label)
+                masks_processed.append(largest_mask)
+            else:
+                masks_processed.append(mask_opened > 0)
+        
+        masks = masks_processed
+        
+        best_mask_idx = np.argmax(scores)
+ 
+        class_id = label[j].item()
+        
+        best_mask_idx, metrics_values, shape_metrics = filter_masks(
+            image, masks, scores, class_id, img_np, point, mask_filter_config, debug
+        )
+        if debug:
+            save_debug_visualization(image, masks, scores, shape_metrics, metrics_values, 
+                                    best_mask_idx, class_id, "Optimized Mask Selection")
+        
+        mask = masks[best_mask_idx]
+        
+        mask_tensor = torch.from_numpy(mask).to(mu.device)
+        
+        markers[mask_tensor] = j + 1
+    
+        xy = mask_tensor.nonzero()[:, (1, 0)].float()
+        
+        if len(xy) > 0:
+            xy_centered = xy - mu[j]
+            
+            xy_rotated = V[j].T.matmul(xy_centered[:, :, None])[:, :, 0]
+
+            max_x = torch.max(torch.abs(xy_rotated[:, 0]))
+            max_y = torch.max(torch.abs(xy_rotated[:, 1]))
+            
+            L_target = torch.stack((max_x, max_y)) ** 2
+            
+            L_diag = torch.diag_embed(L[j])
+            L_target_diag = torch.diag_embed(L_target)
+            
+            instance_loss = gwd_sigma_loss(L_diag.unsqueeze(0), L_target_diag.unsqueeze(0).detach(), reduction='mean')
+            
+            if debug:
+                visualize_loss_calculation(
+                    image, mask_tensor, mu[j], V[j], 
+                    xy_centered, xy_rotated, max_x, max_y, 
+                    L[j], L_target, instance_loss, 
+                    j, class_id
+                )
+        
+            total_loss += instance_loss
+            valid_instances += 1
+            
+    final_loss = total_loss / max(1, valid_instances)
+    
+    return final_loss, markers
+
+
+
+
+def voronoi_watershed_loss(mu, sigma, label, image, pos_thres=0.994, neg_thres=0.005, down_sample=2, topk=0.95, default_sigma=4096, voronoi='gaussian-orientation', alpha=0.1, debug=False):
+    
     J = len(sigma)
     if J == 0:
         return sigma.sum()
-    
     D = down_sample
     H, W = image.shape[-2:]
+    if debug:
+        print(f'Gaussian Voronoi Watershed Loss: {H}x{W}, downsample={D}, J={J}')
+        print(f'default_sigma={default_sigma}, voronoi={voronoi}, alpha={alpha}')
     h, w = H // D, W // D
     x = torch.linspace(0, h, h, device=mu.device)
     y = torch.linspace(0, w, w, device=mu.device)
@@ -239,6 +415,7 @@ def gaussian_voronoi_watershed_loss(mu, sigma,
     vor = mu.new_zeros(J, h, w)
     # Get distribution for each instance
     mm = (mu.detach() / D).round()
+        
     if voronoi == 'standard':
         sg = sigma.new_tensor((default_sigma, 0, 0, default_sigma)).reshape(2, 2)
         sg = sg / D ** 2
@@ -273,7 +450,7 @@ def gaussian_voronoi_watershed_loss(mu, sigma,
     vor[val < neg_thres[cls]] = J + 1
     vor[ridges] = J + 1
 
-    cls_bg = torch.where(vor == J + 1, 15, cls)
+    cls_bg = torch.where(vor == J + 1, 16, cls)
     cls_bg = torch.where(vor == 0, -1, cls_bg)
 
     # PyTorch does not support watershed, use cv2
@@ -282,9 +459,8 @@ def gaussian_voronoi_watershed_loss(mu, sigma,
     img_uint8 = cv2.medianBlur(img_uint8, 3)
     markers = vor.detach().cpu().numpy().astype(np.int32)
     markers = vor.new_tensor(cv2.watershed(img_uint8, markers))
-
     if debug:
-        plot_gaussian_voronoi_watershed(image, cls_bg, markers)
+        plot_gaussian_voronoi_watershed(image, cls_bg, markers, labels=label)
 
     L, V = torch.linalg.eigh(sigma)
     L_target = []
@@ -305,65 +481,89 @@ def gaussian_voronoi_watershed_loss(mu, sigma,
     loss = torch.topk(loss, int(np.ceil(len(loss) * topk)), largest=False)[0].mean()
     return loss, (vor, markers)
 
+def get_loss_from_mask(mu, sigma, label, image, pos_thres, neg_thres, down_sample=2, topk=0.95, default_sigma=4096, voronoi='gaussian-orientation', alpha=0.1, debug=False, mask_filter_config=None,
+# sam_checkpoint='./sam_vit_h_4b8939.pth',model_type='vit_h',
+sam_checkpoint='./mobile_sam.pt',model_type='vit_t',
+sam_instance_thr=-1,
+device=None,
+sam_sample_rules=None): 
+    if debug:
+        print(f"SAM config: checkpoint={sam_checkpoint}, model_type={model_type}, sam_instance_thr={sam_instance_thr}")
+    J = len(sigma)
+    if J == 0:
+        return sigma.sum()
+    if J <= sam_instance_thr:
+        loss, markers = segment_anything(
+            image, mu, sigma,
+            device=mu.device, 
+            sam_checkpoint=sam_checkpoint,
+            model_type=model_type,
+            label=label,
+            debug=debug,
+            mask_filter_config=mask_filter_config,
+            sam_sample_rules=sam_sample_rules,
+        )
+        vor = markers.clone()
+        return loss, (vor, markers)
+    else:
+        loss, (vor, markers) = voronoi_watershed_loss(
+            mu, sigma, label, image, 
+            pos_thres, neg_thres, down_sample, topk, 
+            default_sigma, voronoi, alpha,
+            debug=debug,
+        )
+        return loss, (vor, markers)
+  
+
 
 @MODELS.register_module()
 class VoronoiWatershedLoss(nn.Module):
-    """Gaussian Overlap Loss.
-
-    Args:
-        reduction (str, optional): The method used to reduce the loss into
-            a scalar. Defaults to 'mean'. Options are "none", "mean" and
-            "sum".
-        loss_weight (float, optional): Weight of loss. Defaults to 1.0.
-
-    Returns:
-        loss (torch.Tensor)
+    """VoronoiWatershedLoss.
     """
 
     def __init__(self,
-                 down_sample=2,
-                 reduction='mean',
                  loss_weight=1.0,
+                 down_sample=2,
                  topk=0.95,
                  alpha=0.1,
+                 default_sigma=4096,
                  debug=False,
-                 use_class_specific_watershed=False):
+                 mask_filter_config=None,
+                 sam_instance_thr=-1,
+                 sam_sample_rules=None,
+                 use_class_specific_watershed=False
+                 ):
         super(VoronoiWatershedLoss, self).__init__()
-        self.down_sample = down_sample
-        self.reduction = reduction
         self.loss_weight = loss_weight
+        self.down_sample = down_sample
         self.topk = topk
         self.alpha = alpha
+        self.default_sigma = default_sigma
         self.debug = debug
+        self.mask_filter_config = mask_filter_config
+        self.sam_instance_thr = sam_instance_thr
+        self.sam_sample_rules = sam_sample_rules
         self.use_class_specific_watershed = use_class_specific_watershed
+        self.vis = None
+        
 
     def forward(self, pred, label, image, pos_thres, neg_thres, voronoi='orientation'):
-        """Forward function.
-
-        Args:
-            pred (Tuple): Tuple of (xy, sigma).
-                xy (torch.Tensor): Center point of 2-D Gaussian distribution
-                    with shape (N, 2).
-                sigma (torch.Tensor): Covariance matrix of 2-D Gaussian distribution
-                    with shape (N, 2, 2).
-            image (torch.Tensor): The image for watershed with shape (3, H, W).
-            standard_voronoi (bool, optional): Use standard or Gaussian voronoi.
-
-        Returns:
-            torch.Tensor: The calculated loss
-        """
-        loss, self.vis = gaussian_voronoi_watershed_loss(*pred, 
-                                               label,
-                                               image, 
-                                               pos_thres, 
-                                               neg_thres, 
-                                               self.down_sample, 
-                                               topk=self.topk,
-                                               voronoi=voronoi,
-                                               alpha=self.alpha,
-                                               debug=self.debug)
+        loss, self.vis = get_loss_from_mask(
+        *pred, 
+        label,
+        image, 
+        pos_thres, 
+        neg_thres, 
+        self.down_sample, 
+        default_sigma=self.default_sigma,
+        topk=self.topk,
+        voronoi=voronoi,
+        alpha=self.alpha,
+        debug=self.debug,
+        mask_filter_config=self.mask_filter_config,
+        sam_instance_thr=self.sam_instance_thr,
+        sam_sample_rules=self.sam_sample_rules)
         return self.loss_weight * loss
-
 
 def rbbox2roi(bbox_list):
     """Convert a list of bboxes to roi format.
@@ -377,7 +577,7 @@ def rbbox2roi(bbox_list):
     """
     rois_list = []
     for img_id, bboxes in enumerate(bbox_list):
-        if bboxes.size(0) > 0:
+        if bboxes.size(0) > 0 :
             img_inds = bboxes.new_full((bboxes.size(0), 1), img_id)
             rois = torch.cat([img_inds, bboxes[:, :5]], dim=-1)
         else:
