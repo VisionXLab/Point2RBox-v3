@@ -11,15 +11,19 @@ Driven by the growing need for Oriented Object Detection (OOD), learning from po
 ## TODOs
 
 - [x] Release the paper on arXiv.
-- [ ] Release the complete code.
-- [ ] Release the checkpoints.
+- [x] Release the complete code.
+- [x] Release the checkpoints.
+- [ ] Release training configurations and model checkpoints on 5 additional datasets. 
+
+!!! We have open-sourced the code and model checkpoints. Note that the performance reproduced with the refactored code is fully aligned with, and in some cases shows a slight improvement over, the results reported in the paper.
 
 ## Results and models
 
 |methods|e2e|mAp|config_file|log|email|model|
 |---|---|---|---|---|---|---|
 |PLA|Y|56.43|[point2rbox_v3-1x-dotav1-0](https://pan.quark.cn/s/dd47829984b7)|[20251022_160639](https://pan.quark.cn/s/fb03a9c4a3de)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/f20b5b25edbf)|[epoch_12.pth](https://pan.quark.cn/s/1ea5b81afc51)|
-|PLA+PGDM|Y|61.38|[point2rbox_v3-1x-dotav1-0](https://pan.quark.cn/s/920e021ba5f3)|[20251022_160639](https://pan.quark.cn/s/78de152d8111)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/0408d5c50e5d)|[epoch_12.pth](https://pan.quark.cn/s/dc4b7c2a4233)|
+|Point2RBox-v3|Y|61.38|[point2rbox_v3-1x-dotav1-0](https://pan.quark.cn/s/920e021ba5f3)|[20251022_160639](https://pan.quark.cn/s/78de152d8111)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/0408d5c50e5d)|[epoch_12.pth](https://pan.quark.cn/s/dc4b7c2a4233)|
+|Point2RBox-v3|N|67.24|[rotated-fcos-1x-dotav1-0-using-pseudo](https://pan.quark.cn/s/ec1439c5de12)|[20251028_191527](https://pan.quark.cn/s/815de5c87ce1)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/4be7e15ebda0)|[epoch_12.pth](https://pan.quark.cn/s/ca0eb358ce08)|
 
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
