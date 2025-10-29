@@ -1,12 +1,12 @@
 <div align="center">
 <h1>Point2RBox-v3: Self-Bootstrapping from Point Annotations via Integrated Pseudo-Label Refinement and Utilization</h1>
 </div>
-<a href='https://arxiv.org/pdf/2509.26281'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>  <a href=#citation><img src='https://img.shields.io/badge/Paper-BibTex-Green'></a> 
-
-## Abstract
-<div style="text-align:justify">
-Driven by the growing need for Oriented Object Detection (OOD), learning from point annotations under a weakly-supervised framework has emerged as a promising alternative to costly and laborious manual labeling. In this paper, we discuss two deficiencies in existing point-supervised methods: inefficient utilization and poor quality of pseudo labels. Therefore, we present Point2RBox-v3. At the core are two principles: \textbf{1) Progressive Label Assignment (PLA)}. It dynamically estimates instance sizes in a coarse yet intelligent manner at different stages of the training process, enabling the use of label assignment methods. \textbf{2) Prior-Guided Dynamic Mask Loss (PGDM-Loss)}. It is an enhancement of the Voronoi Watershed Loss from Point2RBox-v2, which overcomes the shortcomings of Watershed in its poor performance in sparse scenes and SAM's poor performance in dense scenes. To our knowledge, Point2RBox-v3 is the first model to employ dynamic pseudo labels for label assignment, and it creatively complements the advantages of SAM model with the watershed algorithm, which achieves excellent performance in both sparse and dense scenes. Our solution gives competitive performance, especially in scenarios with large variations in object size or sparse object occurrences: 66.09\%/56.86\%/41.28\%/46.40\%/19.60\%/45.96\% on DOTA-v1.0/DOTA-v1.5/DOTA-v2.0/DIOR/STAR/RSAR.
-</div>
+<p align="center">
+  <a href='https://arxiv.org/pdf/2509.26281'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>
+  <a href='#citation'><img src='https://img.shields.io/badge/Paper-BibTex-Green'></a>
+  <a href='https://github.com/VisionXLab/Point2RBox-v3'><img src='https://img.shields.io/badge/💻_Code-Github-blue'></a>
+  <a href='https://johnson-magic.github.io/point2rbox-v3.github.io/'><img src='https://img.shields.io/badge/🚀_Demo-Live-orange'></a>
+</p>
 
 ## TODOs
 
@@ -17,7 +17,7 @@ Driven by the growing need for Oriented Object Detection (OOD), learning from po
 
 !!! We have open-sourced the code and model checkpoints. Note that the performance reproduced with the refactored code is fully aligned with, and in some cases shows a slight improvement over, the results reported in the paper.
 
-## Results and models
+## Reproduction
 
 |methods|e2e|mAp|config_file|log|email|model|
 |---|---|---|---|---|---|---|
