@@ -25,6 +25,11 @@
 |Point2RBox-v3|Y|61.38|[point2rbox_v3-1x-dotav1-0](https://pan.quark.cn/s/920e021ba5f3)|[20251022_160639](https://pan.quark.cn/s/78de152d8111)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/0408d5c50e5d)|[epoch_12.pth](https://pan.quark.cn/s/dc4b7c2a4233)|
 |Point2RBox-v3|N|67.24|[rotated-fcos-1x-dotav1-0-using-pseudo](https://pan.quark.cn/s/ec1439c5de12)|[20251028_191527](https://pan.quark.cn/s/815de5c87ce1)|[dota_evaluation_results_feedback_of_task1](https://pan.quark.cn/s/4be7e15ebda0)|[epoch_12.pth](https://pan.quark.cn/s/ca0eb358ce08)|
 
+|method|dataset|e2e|mAp|config_file|log|email|model|
+|---|---|---|---|---|---|---|---|
+|Point2RBox-v3|STAR|Y|16.20|[point2rbox_v3-1x-star](https://pan.quark.cn/s/5a7d85924fdf)|[20251031_181448](https://pan.quark.cn/s/cfae7ddf7040)|[results-tab-409093](https://www.codabench.org/competitions/3475/?secret_key=f1aff9f3-696d-4e10-9a63-f113153ed686#/results-tab)|[epoch_12.pth](https://pan.quark.cn/s/e89220e97d2e)|
+|Point2RBox-v3|STAR|N|19.60|[rotated-fcos-1x-star-using-pseudo](https://pan.quark.cn/s/635ba2bc670e)|[20251102_001001](https://pan.quark.cn/s/fed4ff52166a)|[results-tab-350178](https://www.codabench.org/competitions/3475/?secret_key=f1aff9f3-696d-4e10-9a63-f113153ed686#/results-tab)|[epoch_12.pth](https://pan.quark.cn/s/6913784b40d5)|
+
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
 <p align="center">
