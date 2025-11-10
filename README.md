@@ -31,6 +31,8 @@
 |Point2RBox-v3|STAR|N|19.60|[rotated-fcos-1x-star-using-pseudo](https://pan.quark.cn/s/635ba2bc670e)|[20251102_001001](https://pan.quark.cn/s/fed4ff52166a)|[results-tab-350178](https://www.codabench.org/competitions/3475/?secret_key=f1aff9f3-696d-4e10-9a63-f113153ed686#/results-tab)|[epoch_12.pth](https://pan.quark.cn/s/6913784b40d5)|
 |Point2RBox-v3|DIOR|Y|41.70|[point2rbox_v3-1x-dior](https://pan.quark.cn/s/8b474708c12b)|[20251031_202113](https://pan.quark.cn/s/b1e5647902ab)|x|[epoch_12.pth](https://pan.quark.cn/s/af2e1a97e0e2)|
 |Point2RBox-v3|DIOR|N|46.60|[rotated-fcos-1x-dior-using-pseudo](https://pan.quark.cn/s/f1faabf451f7)|[20251101_135239](https://pan.quark.cn/s/c4eae5602aa2)|x|[epoch_12.pth](https://pan.quark.cn/s/056d82cbdadf)|
+|Point2RBox-v3|DOTAV1-5|Y|49.08|[point2rbox_v3-1x-dotav1-5](https://pan.quark.cn/s/b63e63760eba)|[20251108_172545](https://pan.quark.cn/s/d61c8d032560)|[DOTA-v1.5_Evaluation_Results_Feedback_of_Task1](https://pan.quark.cn/s/438eb1014f2b)|[epoch_12.pth](https://pan.quark.cn/s/03cffd557793)|
+
 
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
