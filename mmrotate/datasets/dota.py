@@ -211,3 +211,53 @@ class DOTAv2Dataset(DOTADataset):
                     (147, 116, 116), (0, 0, 255), (220, 20, 60), (119, 11, 32),
                     (0, 0, 142)]
     }
+    
+
+@DATASETS.register_module()
+class DIATOMDataset(DOTADataset):
+    """DIATOM dataset for detection.
+
+    Note: ``ann_file`` in DIATOM is different from the BaseDataset.
+    In BaseDataset, it is the path of an annotation file. In DIATOM,
+    it is the path of a folder containing XML files.
+    """
+
+    METAINFO = {
+        'classes':
+        ('Achnanthidiumbiasolettianum', 'Achnanthidiumminutissimum', 'Adlafiaminuscula', 'Amphorainariensis',
+         'Amphorapediculus', 'Caloneislancettula', 'Cocconeispseudolineata', 'Cymbellacantonatii', 'Cymbellaexcisavar.procera', 
+         'Cymbellaexcisavar.subcapitata', 'Cymbopleuraamphicephala',
+         'Denticulakuetzingii', 'Diatomamesodon', 'Diatomamoniliformis', 'Didymospheniageminata', 'Diploneisfontanella',
+         'Diploneisfontanella', 'Encyonemasilesiacum', 'Encyonemaventricosum', 'Epithemiaargus', 'Epithemiagoeppertiana',
+        'Fragilariarecapitellata', 'Frustuliavulgaris', 'Gomphonemacalcifugum', 'Gomphonemadrutelingense', 'Gomphonemaexilissimum',
+        'Gomphonemamicropus', 'Gomphonemaminutum', 'Gomphonemaolivaceum', 'Gomphonemapumilum', 'Gomphonemapumilumvar.rigidum',
+        'Gomphonemasupertergestinum', 'Gomphonematergestinum', 'Halamphoraparaveneta', 'Halamphoraveneta', 'Hantzschianaabundans',
+        'Humidophilacontenta', 'Humidophilaperpusilla', 'Luticolanivalis', 'Meridioncirculare', 'Naviculacapitatoradiata', 
+        'Naviculacryptocephala', 'Naviculacryptotenella', 'Naviculacryptotenelloides', 'Naviculagregaria', 'Naviculalanceolata',
+        'Naviculamoskalii', 'Naviculanovaesiberica', 'Naviculareichardtiana', 'Naviculatripunctata', 'Naviculatrivialis', 
+        'Naviculaupsaliensis', 'Neidiomorphabinodiformis', 'Nitzschiaarchibaldii', 'Nitzschiahantzschiana', 'Nitzschialinearis',
+        'Nitzschiapalea', 'Nitzschiarecta', 'Pantocsekiellaocellata', 'Pinnulariabrebissonii', 'Planothidiumfrequentissimum',
+        'Planothidiumlanceolatum', 'Rhoicospheniaabbreviata', 'Sellaphoraradiosa', 'Sellaphorasaugerresii', 'Stauroneisblazenciciae',
+        'Surellaminuta', 'Surirellabrebissoniivar.kuetzingii'),
+        # palette is a list of color tuples, which is used for visualization.
+        'palette' : [
+        (165, 42, 42), (189, 183, 107), (0, 255, 0), (255, 0, 0),
+        (138, 43, 226), (255, 128, 0), (255, 0, 255), (0, 255, 255),
+        (255, 193, 193), (0, 51, 153), (255, 250, 205), (0, 139, 139),
+        (255, 255, 0), (147, 116, 116), (0, 0, 255), (220, 20, 60),
+        (119, 11, 32), (0, 0, 142), (128, 0, 0), (128, 128, 0),
+        (0, 128, 0), (128, 0, 128), (0, 128, 128), (0, 0, 128),
+        (72, 61, 139), (47, 79, 79), (148, 0, 211), (85, 107, 47),
+        (139, 69, 19), (160, 82, 45), (178, 34, 34), (210, 105, 30),
+        (205, 92, 92), (255, 69, 0), (255, 99, 71), (255, 127, 80),
+        (218, 112, 214), (186, 85, 211), (153, 50, 204), (138, 43, 226),
+        (106, 90, 205), (123, 104, 238), (0, 191, 255), (30, 144, 255),
+        (100, 149, 237), (70, 130, 180), (173, 216, 230), (135, 206, 235),
+        (0, 206, 209), (72, 209, 204), (64, 224, 208), (0, 255, 127),
+        (60, 179, 113), (46, 139, 87), (34, 139, 34), (50, 205, 50),
+        (152, 251, 152), (144, 238, 144), (240, 230, 140), (238, 232, 170),
+        (255, 215, 0), (255, 165, 0), (255, 140, 0), (255, 99, 71),
+        (250, 128, 114), (233, 150, 122), (255, 160, 122), (219, 112, 147),
+        (199, 21, 133), (255, 20, 147), (255, 105, 180), (255, 182, 193)
+    ]
+    }
