@@ -2,7 +2,7 @@
 
 It is recommended to symlink the dataset root to `data/` under the project root directory. If your folder structure differs, you will need to modify the `data_root` path in the corresponding config files.
 
-Data preparation scripts are located in `tools/data_prepare/`.
+Data preparation scripts are located in `tools/data_prepare/`. Remember to **UNZIP** it.
 
 ## Download Datasets
 
