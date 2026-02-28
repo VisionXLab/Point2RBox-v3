@@ -34,6 +34,39 @@
 |Point2RBox-v3|DOTAV1-5|Y|49.08|[point2rbox_v3-1x-dotav1-5](https://pan.quark.cn/s/b63e63760eba)|[20251108_172545](https://pan.quark.cn/s/d61c8d032560)|[DOTA-v1.5_Evaluation_Results_Feedback_of_Task1](https://pan.quark.cn/s/438eb1014f2b)|[epoch_12.pth](https://pan.quark.cn/s/03cffd557793)|
 
 
+## Getting Started
+
+- [**Environment Setup**](environment.md) — Step-by-step installation guide with pinned package versions. Please read this carefully before proceeding.
+- [**Data Preparation**](data.md) — Download links, directory structures, and splitting instructions for all supported datasets.
+
+### Quick Start
+
+Interactive launcher scripts are provided for convenience. They automatically detect available GPUs, let you select a config, and build the full command:
+
+```bash
+# Training (interactive)
+bash train.sh
+
+# Testing (interactive)
+bash test.sh
+```
+
+By default, the scripts activate the `point2rbox-v3` conda environment. To use a different environment name:
+
+```bash
+CONDA_ENV=your_env_name bash train.sh
+```
+
+You can also run training/testing directly without the launcher:
+
+```bash
+# Train on a single GPU
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/point2rbox_v3/point2rbox_v3-1x-dotav1-0.py
+
+# Test with a checkpoint
+CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/point2rbox_v3-1x-dotav1-0.py work_dirs/point2rbox_v3-1x-dotav1-0/epoch_12.pth
+```
+
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
 <p align="center">
