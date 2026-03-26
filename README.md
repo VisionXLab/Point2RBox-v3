@@ -6,6 +6,7 @@
   <a href='#citation'><img src='https://img.shields.io/badge/Paper-BibTex-Green'></a>
   <a href='https://github.com/VisionXLab/Point2RBox-v3'><img src='https://img.shields.io/badge/💻_Code-Github-blue'></a>
   <a href='https://johnson-magic.github.io/point2rbox-v3.github.io/'><img src='https://img.shields.io/badge/🚀_Demo-Live-orange'></a>
+  <a href='./poster/iclr2026-poster-point2rbox-v3.pdf'><img src='https://img.shields.io/badge/📄_Poster-PDF-brightgreen'></a>
 </p>
 
 ## TODOs
