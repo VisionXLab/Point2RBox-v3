@@ -66,6 +66,15 @@ CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/point2rbox_v3/point2rbox_v3
 
 # Test with a checkpoint
 CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/point2rbox_v3-1x-dotav1-0.py work_dirs/point2rbox_v3-1x-dotav1-0/epoch_12.pth
+
+# two-stage training (total 2 steps)
+## step1: generator pseudo label
+CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/point2rbox_v3-pseudo-generator-dotav1-0.py work_dirs/point2rbox_v3-1x-dotav1-0/epoch_12.pth
+## step2: start to train
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/point2rbox_v3/rotated-fcos-1x-dotav1-0-using-pseudo.py
+
+# two-stage test
+CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/rotated-fcos-1x-dotav1-0-using-pseudo.py work_dirs/rotated-fcos-1x-dotav1-0-using-pseudo/epoch_12.pth
 ```
 
 ## Overview
