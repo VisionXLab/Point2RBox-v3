@@ -77,6 +77,25 @@ CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/point2rbox_v3/rotated-fcos-
 CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/rotated-fcos-1x-dotav1-0-using-pseudo.py work_dirs/rotated-fcos-1x-dotav1-0-using-pseudo/epoch_12.pth
 ```
 
+### Some details about the data and evaluation
+
+#### evaluation website:
+
+* DOTA v1.0/1.5/2.0 evaluation website: <u>[A Large-Scale Benchmark and Challenges for Object Detection in Aerial Images](https://captain-whu.github.io/DOTA/evaluation.html)</u>
+
+* STAR evaluation website: <u>[OBJECT DETECTION IN STAR DATASET](https://www.codabench.org/competitions/3475)</u>
+
+* The DIOR and RSAR datasets: evaluated locally without official websites. It should be noted that on the official GitHub repository of RSAR, users have reported missing annotation files for the eval and test datasets. If you encounter a similar issue, you can contact the official authors <u>[@zhasion](https://github.com/zhasion)</u>. On the other hand, some other users <u>[@wokaikaixinxin](https://github.com/wokaikaixinxin)</u> have uploaded the files to: <u>[modelscope-RSAR](https://www.modelscope.cn/datasets/wokaikaixinxin/RSAR/files)</u>
+
+#### dataset:
+
+If you want to quickly enter the remote sensing field or follow our method, we provide download links for the preprocessed dataset files here.
+
+* <u>[split_ss_dota.zip](https://pan.quark.cn/s/4c80b2b91895)</u>
+* <u>[split_ss_dota1_5.zip]()</u>
+
+
+
 ## Overview
 * **Visual Comparison & Radar Evaluation.**
 <p align="center">
