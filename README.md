@@ -92,7 +92,11 @@ CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/point2rbox_v3/rotated-fcos-1
 If you want to quickly enter the remote sensing field or follow our method, we provide download links for the preprocessed dataset files here.
 
 * <u>[split_ss_dota.zip](https://pan.quark.cn/s/4c80b2b91895)</u>
-* <u>[split_ss_dota1_5.zip]()</u>
+* <u>[split_ss_dota1_5.zip](https://pan.quark.cn/s/0942d7e84809)</u>
+* <u>[split_ss_dota2_0.zip](https://pan.quark.cn/s/f185eb5d9049)</u>
+* <u>[dior.zip](https://pan.quark.cn/s/b299df86038c)</u>
+* <u>[split_ss_star.zip](https://pan.quark.cn/s/8832ca0ba099)</u>
+* <u>[RSAR.zip](https://pan.quark.cn/s/ac72e70d4766)</u>
 
 
 
